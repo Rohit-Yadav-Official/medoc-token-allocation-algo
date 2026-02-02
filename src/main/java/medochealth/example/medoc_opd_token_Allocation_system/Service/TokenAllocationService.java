@@ -48,6 +48,8 @@ public class TokenAllocationService {
      */
     @Transactional
     public TokenResponseDTO allocateToken(TokenRequestDTO request) {
+
+        try{
         // Validate doctor exists
         Optional<Doctor> doctorOpt = doctorRepository.findById(request.getDoctorId());
         if (doctorOpt.isEmpty() || !doctorOpt.get().isActive()) {
@@ -142,6 +144,10 @@ public class TokenAllocationService {
         }
         
         return response;
+        }
+        catch (Exception e) {
+            return createErrorResponse(e.getMessage());
+        }
     }
 
     /**

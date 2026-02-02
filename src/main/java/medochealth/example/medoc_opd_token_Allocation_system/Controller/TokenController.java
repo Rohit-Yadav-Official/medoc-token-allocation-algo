@@ -41,7 +41,8 @@ public class TokenController {
 
     @PostMapping("/allocate")
     public ResponseEntity<TokenResponseDTO> allocateToken(@RequestBody TokenRequestDTO request) {
-        TokenResponseDTO response = tokenAllocationService.allocateToken(request);
+
+       try{ TokenResponseDTO response = tokenAllocationService.allocateToken(request);
         
         if (response.getMessage() != null && response.getMessage().contains("not found") || 
             response.getMessage().contains("inactive") || 
@@ -50,19 +51,31 @@ public class TokenController {
         }
         
         return ResponseEntity.ok(response);
+       }
+       catch (Exception e) {
+           e.printStackTrace();
+           return ResponseEntity.badRequest().build();
+       }
+
     }
 
 
     @GetMapping("/{tokenId}")
     public ResponseEntity<TokenResponseDTO> getToken(@PathVariable String tokenId) {
-        Optional<Token> tokenOpt = tokenRepository.findByTokenId(tokenId);
-        if (tokenOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        try {
+            Optional<Token> tokenOpt = tokenRepository.findByTokenId(tokenId);
+            if (tokenOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Token token = tokenOpt.get();
+            TokenResponseDTO dto = convertToDTO(token);
+            return ResponseEntity.ok(dto);
         }
-        
-        Token token = tokenOpt.get();
-        TokenResponseDTO dto = convertToDTO(token);
-        return ResponseEntity.ok(dto);
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
     }
 
 
@@ -71,17 +84,25 @@ public class TokenController {
             @PathVariable String doctorId,
             @PathVariable LocalDate date,
             @PathVariable String slot) {
-        List<TokenStatus> statuses = List.of(
-                TokenStatus.ALLOCATED,
-                TokenStatus.COMPLETED,
-                TokenStatus.WAITING
-        );
+        try {
 
-        List<Token> tokens = tokenRepository
-                .findByDoctorIdAndVisitDateAndSlotAndStatusIn(
-                        doctorId, date, slot, statuses
-                );
-        return ResponseEntity.ok(tokens);
+
+            List<TokenStatus> statuses = List.of(
+                    TokenStatus.ALLOCATED,
+                    TokenStatus.COMPLETED,
+                    TokenStatus.WAITING
+            );
+
+            List<Token> tokens = tokenRepository
+                    .findByDoctorIdAndVisitDateAndSlotAndStatusIn(
+                            doctorId, date, slot, statuses
+                    );
+            return ResponseEntity.ok(tokens);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
     }
 
 
@@ -90,8 +111,14 @@ public class TokenController {
             @PathVariable String doctorId,
             @PathVariable String slot,
             @PathVariable LocalDate date) {
-        SlotCapacityDTO capacity = slotCapacityService.getSlotCapacityInfo(doctorId, slot, date);
-        return ResponseEntity.ok(capacity);
+        try {
+            SlotCapacityDTO capacity = slotCapacityService.getSlotCapacityInfo(doctorId, slot, date);
+            return ResponseEntity.ok(capacity);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
     }
 
 
@@ -99,90 +126,123 @@ public class TokenController {
     public ResponseEntity<Map<String, String>> cancelToken(
             @PathVariable String tokenId,
             @RequestParam(required = false, defaultValue = "Patient cancellation") String reason) {
-        boolean success = tokenReallocationService.cancelToken(tokenId, reason);
-        
-        Map<String, String> response = new HashMap<>();
-        if (success) {
-            response.put("message", "Token cancelled successfully");
-            return ResponseEntity.ok(response);
-        } else {
-            response.put("message", "Token not found or cannot be cancelled");
-            return ResponseEntity.badRequest().body(response);
+
+        try {
+            boolean success = tokenReallocationService.cancelToken(tokenId, reason);
+
+            Map<String, String> response = new HashMap<>();
+            if (success) {
+                response.put("message", "Token cancelled successfully");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("message", "Token not found or cannot be cancelled");
+                return ResponseEntity.badRequest().body(response);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
         }
     }
 
 
     @PutMapping("/{tokenId}/no-show")
     public ResponseEntity<Map<String, String>> markNoShow(@PathVariable String tokenId) {
-        boolean success = tokenReallocationService.markNoShow(tokenId);
-        
-        Map<String, String> response = new HashMap<>();
-        if (success) {
-            response.put("message", "Token marked as no-show");
-            return ResponseEntity.ok(response);
-        } else {
-            response.put("message", "Token not found or cannot be marked as no-show");
-            return ResponseEntity.badRequest().body(response);
+        try {
+            boolean success = tokenReallocationService.markNoShow(tokenId);
+
+            Map<String, String> response = new HashMap<>();
+            if (success) {
+                response.put("message", "Token marked as no-show");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("message", "Token not found or cannot be marked as no-show");
+                return ResponseEntity.badRequest().body(response);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
         }
     }
 
 
     @PutMapping("/{tokenId}/emergency")
     public ResponseEntity<Map<String, String>> insertEmergencyToken(@PathVariable String tokenId) {
-        boolean success = tokenReallocationService.insertEmergencyToken(tokenId);
-        
-        Map<String, String> response = new HashMap<>();
-        if (success) {
-            response.put("message", "Emergency token inserted successfully");
-            return ResponseEntity.ok(response);
-        } else {
-            response.put("message", "Emergency token insertion failed");
-            return ResponseEntity.badRequest().body(response);
+        try {
+            boolean success = tokenReallocationService.insertEmergencyToken(tokenId);
+
+            Map<String, String> response = new HashMap<>();
+            if (success) {
+                response.put("message", "Emergency token inserted successfully");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("message", "Emergency token insertion failed");
+                return ResponseEntity.badRequest().body(response);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
         }
     }
 
 
     @PutMapping("/{tokenId}/complete")
     public ResponseEntity<Map<String, String>> completeToken(@PathVariable String tokenId) {
-        Optional<Token> tokenOpt = tokenRepository.findByTokenId(tokenId);
-        if (tokenOpt.isEmpty()) {
+        try {
+            Optional<Token> tokenOpt = tokenRepository.findByTokenId(tokenId);
+            if (tokenOpt.isEmpty()) {
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Token not found");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            Token token = tokenOpt.get();
+            token.setStatus(TokenStatus.COMPLETED);
+            token.setCompletedAt(java.time.LocalDateTime.now());
+            tokenRepository.save(token);
+
+            // Process waiting queue
+            tokenReallocationService.processWaitingQueue(
+                    token.getDoctorId(), token.getSlot(), token.getVisitDate()
+            );
+
             Map<String, String> response = new HashMap<>();
-            response.put("message", "Token not found");
-            return ResponseEntity.badRequest().body(response);
+            response.put("message", "Token marked as completed");
+            return ResponseEntity.ok(response);
         }
-        
-        Token token = tokenOpt.get();
-        token.setStatus(TokenStatus.COMPLETED);
-        token.setCompletedAt(java.time.LocalDateTime.now());
-        tokenRepository.save(token);
-        
-        // Process waiting queue
-        tokenReallocationService.processWaitingQueue(
-            token.getDoctorId(), token.getSlot(), token.getVisitDate()
-        );
-        
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Token marked as completed");
-        return ResponseEntity.ok(response);
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+        }
     }
 
 
     @PutMapping("/{tokenId}/start")
     public ResponseEntity<Map<String, String>> startToken(@PathVariable String tokenId) {
-        Optional<Token> tokenOpt = tokenRepository.findByTokenId(tokenId);
-        if (tokenOpt.isEmpty()) {
+
+        try {
+            Optional<Token> tokenOpt = tokenRepository.findByTokenId(tokenId);
+            if (tokenOpt.isEmpty()) {
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Token not found");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            Token token = tokenOpt.get();
+            token.setStatus(TokenStatus.IN_PROGRESS);
+            tokenRepository.save(token);
+
             Map<String, String> response = new HashMap<>();
-            response.put("message", "Token not found");
-            return ResponseEntity.badRequest().body(response);
+            response.put("message", "Token marked as in-progress");
+            return ResponseEntity.ok(response);
         }
-        
-        Token token = tokenOpt.get();
-        token.setStatus(TokenStatus.IN_PROGRESS);
-        tokenRepository.save(token);
-        
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Token marked as in-progress");
-        return ResponseEntity.ok(response);
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
+
+        }
     }
 
     private TokenResponseDTO convertToDTO(Token token) {

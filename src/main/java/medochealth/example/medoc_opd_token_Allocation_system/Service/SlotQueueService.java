@@ -16,7 +16,7 @@ public class SlotQueueService {
         this.redisTemplate = redisTemplate;
     }
 
-    /* ================== KEYS ================== */
+
 
     private String waitingKey(String slotId) {
         return "slot:" + slotId + ":waiting";
@@ -30,7 +30,7 @@ public class SlotQueueService {
         return "slot:" + slotId + ":lock";
     }
 
-    /* ================== WAITING QUEUE ================== */
+
 
     public void addToWaitingQueue(String slotId, Token token) {
         double score = calculateScore(token);
@@ -52,7 +52,7 @@ public class SlotQueueService {
         return null;
     }
 
-    /* ================== ALLOCATED QUEUE ================== */
+
 
     public void addToAllocatedQueue(String slotId, Token token) {
         double score = calculateScore(token);
@@ -78,7 +78,7 @@ public class SlotQueueService {
         removeFromAllocated(slotId, tokenId);
     }
 
-    /* ================== NO-SHOW ================== */
+
 
     public void startNoShowTimer(String tokenId) {
         redisTemplate.opsForValue()
@@ -89,7 +89,7 @@ public class SlotQueueService {
         redisTemplate.delete("token:" + tokenId + ":grace");
     }
 
-    /* ================== SLOT LOCK ================== */
+
 
     public boolean acquireSlotLock(String slotId) {
         Boolean locked = redisTemplate.opsForValue()
@@ -102,7 +102,7 @@ public class SlotQueueService {
         redisTemplate.delete(lockKey(slotId));
     }
 
-    /* ================== SCORE ================== */
+
 
     private double calculateScore(Token token) {
         return token.getPriority() * 1_000_000_000L

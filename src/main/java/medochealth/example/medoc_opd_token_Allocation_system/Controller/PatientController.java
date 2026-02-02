@@ -21,21 +21,39 @@ public class PatientController {
 
     @GetMapping("/{patientId}")
     public ResponseEntity<Patient> getPatient(@PathVariable String patientId) {
-        Optional<Patient> patient = patientRepository.findById(patientId);
-        return patient.map(ResponseEntity::ok)
-                     .orElse(ResponseEntity.notFound().build());
+        try {
+            Optional<Patient> patient = patientRepository.findById(patientId);
+            return patient.map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        }
+        catch (Exception e) {
+            return ResponseEntity.notFound().build();
+
+        }
     }
 
     @GetMapping()
     public ResponseEntity<List<Patient>> getallPatient() {
-        List<Patient> patients = patientRepository.findAll();
-        return ResponseEntity.ok(patients);
+        try {
+            List<Patient> patients = patientRepository.findAll();
+            return ResponseEntity.ok(patients);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @PostMapping
     public ResponseEntity<Patient> createPatient(@RequestBody Patient patient) {
-        Patient saved = patientRepository.save(patient);
-        return ResponseEntity.ok(saved);
+        try {
+            Patient saved = patientRepository.save(patient);
+            return ResponseEntity.ok(saved);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
 }
 

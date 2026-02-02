@@ -248,32 +248,24 @@ Within the same priority level, tokens are ordered by creation time:
 - Reject new allocation if active token exists
 - Return error message
 
-### 6. Doctor Inactive
-**Handling:**
-- Validate doctor active status
-- Reject allocation if inactive
-- Return error message
 
-### 7. Invalid Slot for Doctor
+
+### 6. Invalid Slot for Doctor
 **Handling:**
 - Validate slot exists in doctor's available slots
 - Reject if invalid
 - Return error message
 
-### 8. No-Show Grace Period
-**Handling:**
-- 10-minute grace period before marking as no-show
-- Timer stored in Redis
-- Automatic expiration triggers no-show processing
 
-### 9. Token Number Assignment
+
+### 7. Token Number Assignment
 **Handling:**
 - Sequential numbering within slot
 - Query max token number for slot
 - Assign next number
 - Emergency tokens get number 1, shift others
 
-### 10. Concurrent Allocations
+### 8. Concurrent Allocations
 **Handling:**
 - Redis distributed locks
 - 5-second lock timeout

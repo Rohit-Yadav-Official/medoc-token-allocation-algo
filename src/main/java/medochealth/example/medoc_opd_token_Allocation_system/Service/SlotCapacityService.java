@@ -26,38 +26,39 @@ public class SlotCapacityService {
         this.redisTemplate = redisTemplate;
     }
 
-    /**
-     * Get or set slot capacity for a doctor-slot-date combination
-     */
+
     public int getSlotCapacity(String doctorId, String slot, LocalDate visitDate) {
-        String key = getCapacityKey(doctorId, slot, visitDate);
-        Object capacity = redisTemplate.opsForValue().get(key);
-        
-        if (capacity != null) {
-            if (capacity instanceof String) {
-                return Integer.parseInt((String) capacity);
-            } else if (capacity instanceof Integer) {
-                return (Integer) capacity;
+
+        try {
+            String key = getCapacityKey(doctorId, slot, visitDate);
+            Object capacity = redisTemplate.opsForValue().get(key);
+
+            if (capacity != null) {
+                if (capacity instanceof String) {
+                    return Integer.parseInt((String) capacity);
+                } else if (capacity instanceof Integer) {
+                    return (Integer) capacity;
+                }
             }
+
+            // Default capacity
+            int defaultCapacity = DEFAULT_SLOT_CAPACITY;
+            setSlotCapacity(doctorId, slot, visitDate, defaultCapacity);
+            return defaultCapacity;
         }
-        
-        // Default capacity
-        int defaultCapacity = DEFAULT_SLOT_CAPACITY;
-        setSlotCapacity(doctorId, slot, visitDate, defaultCapacity);
-        return defaultCapacity;
+        catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
-    /**
-     * Set custom capacity for a slot
-     */
+
     public void setSlotCapacity(String doctorId, String slot, LocalDate visitDate, int capacity) {
         String key = getCapacityKey(doctorId, slot, visitDate);
         redisTemplate.opsForValue().set(key, String.valueOf(capacity), 1, TimeUnit.DAYS);
     }
 
-    /**
-     * Get current allocation count for a slot
-     */
+
     public int getCurrentAllocation(String doctorId, String slot, LocalDate visitDate) {
         List<TokenStatus> allocatedStatuses = Arrays.asList(
             TokenStatus.ALLOCATED, 
@@ -70,9 +71,6 @@ public class SlotCapacityService {
         );
     }
 
-    /**
-     * Check if slot has available capacity
-     */
     public boolean hasAvailableCapacity(String doctorId, String slot, LocalDate visitDate) {
         int capacity = getSlotCapacity(doctorId, slot, visitDate);
         int allocated = getCurrentAllocation(doctorId, slot, visitDate);
@@ -82,18 +80,14 @@ public class SlotCapacityService {
         return available > 0;
     }
 
-    /**
-     * Check if slot has capacity for emergency (bypasses buffer)
-     */
+
     public boolean hasEmergencyCapacity(String doctorId, String slot, LocalDate visitDate) {
         int capacity = getSlotCapacity(doctorId, slot, visitDate);
         int allocated = getCurrentAllocation(doctorId, slot, visitDate);
         return allocated < capacity;
     }
 
-    /**
-     * Get slot capacity information
-     */
+
     public SlotCapacityDTO getSlotCapacityInfo(String doctorId, String slot, LocalDate visitDate) {
         SlotCapacityDTO dto = new SlotCapacityDTO();
         dto.setDoctorId(doctorId);

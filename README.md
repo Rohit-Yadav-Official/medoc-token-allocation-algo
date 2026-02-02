@@ -1,1 +1,0 @@
-# medoc-token-allocation-algo
